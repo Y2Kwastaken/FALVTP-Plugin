@@ -1,3 +1,5 @@
+<img src="icon.png" alt="FALVTP icon" width="128" align="right">
+
 # FALVTP
 
 **F**ast **A**sync **L**agless **V**illager **T**rading **P**andemonium.

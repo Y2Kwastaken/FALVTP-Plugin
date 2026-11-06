@@ -1,5 +1,5 @@
 name: FALVTP
-version: '1.0.0'
+version: '1.1.0'
 main: "sh.miles.falvtp.FalvtpPlugin"
 description: "a fast and lagless villager trading alternative"
 api-version: '26.3'

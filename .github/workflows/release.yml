@@ -1,6 +1,7 @@
-# Builds the plugin on every push to main and publishes the jar as a GitHub release.
+# Builds the plugin on every push to main and publishes the jar as a GitHub release and to Hangar.
 # Each release is tagged v<version>-build.<run number>, e.g. v1.0.0-build.14, so every push gets its own version
 # without having to bump the Gradle version first. Bump `version` in settings.gradle.kts for a new base version.
+# Hangar needs the HANGAR_API_TOKEN repository secret (a Hangar API key with the create_version permission).
 name: Release
 
 on:
@@ -68,3 +69,9 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "FALVTP ${VERSION}" \
             --generate-notes
+
+      - name: Publish to Hangar
+        env:
+          HANGAR_API_TOKEN: ${{ secrets.HANGAR_API_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: ./gradlew publishPluginPublicationToHangar -PreleaseVersion="$VERSION" --stacktrace
