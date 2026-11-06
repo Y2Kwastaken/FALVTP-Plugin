@@ -1,0 +1,70 @@
+# Builds the plugin on every push to main and publishes the jar as a GitHub release.
+# Each release is tagged v<version>-build.<run number>, e.g. v1.0.0-build.14, so every push gets its own version
+# without having to bump the Gradle version first. Bump `version` in settings.gradle.kts for a new base version.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  # lets you rerun it by hand from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  # needed to create tags and releases
+  contents: write
+
+# one release at a time, in push order
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: |
+          chmod +x gradlew
+          ./gradlew build
+
+      - name: Work out the version
+        id: version
+        run: |
+          base=$(./gradlew -q properties --property version | sed -n 's/^version: //p')
+          if [ -z "$base" ]; then
+            echo "Could not read the project version from Gradle" >&2
+            exit 1
+          fi
+          version="${base}-build.${GITHUB_RUN_NUMBER}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Releasing $version"
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # the plugin jar, not any sources/javadoc/dev jars that might sit next to it
+          jar=$(find build/libs -maxdepth 1 -name '*.jar' ! -name '*-sources.jar' ! -name '*-javadoc.jar' ! -name '*-dev*.jar' | head -n 1)
+          if [ -z "$jar" ]; then
+            echo "No jar found in build/libs" >&2
+            exit 1
+          fi
+          cp "$jar" "FALVTP-${VERSION}.jar"
+
+          gh release create "v${VERSION}" "FALVTP-${VERSION}.jar" \
+            --target "$GITHUB_SHA" \
+            --title "FALVTP ${VERSION}" \
+            --generate-notes

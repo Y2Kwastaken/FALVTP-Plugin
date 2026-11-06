@@ -1,0 +1,100 @@
+# FALVTP configuration. Defaults match vanilla villagers.
+# Invalid values are logged on startup and fall back to the default shown here.
+# Text templates are MiniMessage (https://docs.papermc.io/adventure/minimessage/) and can use:
+#   <profession>  translated profession name, e.g. Librarian
+#   <level>       trader level number, 1-5
+#   <level_name>  translated level name, e.g. Novice, Apprentice, Master
+
+restock:
+  # Restocks allowed per day. 0 disables restocking entirely.
+  max-per-day: 2
+  # Minimum game ticks between two restocks on the same day (20 ticks = 1 second).
+  cooldown-ticks: 2400
+  # Only restock during villager work hours (day ticks 2000-9000). Restocking happens when a player opens a trader.
+  work-hours-only: true
+
+leveling:
+  # Trader experience needed to reach levels 2, 3, 4 and 5. Exactly four strictly ascending numbers.
+  experience: [10, 70, 150, 250]
+
+experience-orbs:
+  # Whether trades drop experience orbs for the player.
+  enabled: true
+  # Orb experience per trade is base + random(0 to spread - 1).
+  base: 3
+  spread: 4
+  # Extra orb experience when a trade levels the trader up.
+  level-up-bonus: 5
+
+pricing:
+  # Apply the vanilla Hero of the Village discount.
+  hero-of-the-village: true
+
+interact:
+  # Sneaking skips the trader, so players can place blocks against it.
+  sneak-bypass: true
+
+sounds:
+  # Set sound to "" to turn a sound off. Custom resource pack sounds work too.
+  open:
+    sound: entity.villager.trade
+    volume: 1.0
+    pitch: 1.0
+  # Played when the trader is already busy with another player.
+  deny:
+    sound: entity.villager.no
+    volume: 1.0
+    pitch: 1.0
+
+menu:
+  # Trade menu title.
+  title: "<profession>"
+
+item:
+  # The workstation item dropped when a trader is broken. It keeps the trader's level and trades.
+  name: "<!i><profession> Workstation"
+  glint: true
+  # Lore lines, e.g. ["<gray><level_name>"]. Lore is italic purple by default; start a line with <!i> to undo that.
+  lore: []
+  # Dropped instead when a trader that was never traded with is broken. Placing it rolls brand new trades.
+  # MiniMessage formatting works, with the profession tag, but other placeholders don't resolve.
+  basic:
+    name: "<!i><profession> Workstation"
+    glint: false
+    lore: ["<gray>Place to roll new trades"]
+
+soul-vial:
+  # Right-click a villager with a plain glass bottle to harvest its DNA; the bottle becomes this filled soul vial.
+  # material:     any item id. A potion-like item (potion, splash_potion, lingering_potion) shows the liquid colour.
+  #               The vial is never drunk or eaten, whatever the material.
+  # item-model:   a resource pack item model such as myserver:soul_vial, or "" for the material's own model.
+  # name / lore:  plain MiniMessage. Italic by default; the <!i> prefix turns that off.
+  # liquid-color: colour of the liquid as #RRGGBB, or "" for the material's default.
+  material: potion
+  item-model: ""
+  name: "<!i><aqua>Soul Vial"
+  glint: true
+  lore: ["<!i><gray>Use on a workstation to bind it"]
+  liquid-color: "#7FD8FF"
+  # Game ticks a villager needs before it can be harvested again (24000 = one Minecraft day, 20 = one second).
+  # Counted per villager and stored on the villager. 0 turns the cooldown off.
+  cooldown-ticks: 24000
+
+messages:
+  # Shown in the action bar. MiniMessage; "" turns a message off.
+  harvest-success: "<green>The vial fills with the villager's soul"
+  # <time>: how long until this villager can be harvested again, e.g. 4m 30s
+  harvest-cooldown: "<red>This villager's soul is still recovering (<time>)"
+  harvest-ineligible: "<red>This villager has no soul to give"
+  # <profession>: the profession of the workstation that was bound
+  bind-success: "<green>The <profession> workstation awakens"
+  bind-occupied: "<red>This workstation already holds a soul"
+
+protection:
+  # protect = the trader is left in place, drop = it breaks and drops its workstation item.
+  # Pistons are always blocked.
+  fire: protect
+  # Only explosions that destroy blocks; wind charges never touch traders.
+  explosions: drop
+  # Whether a creative mode player breaking a trader gets the workstation item.
+  creative-drops: true
