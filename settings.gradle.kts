@@ -5,5 +5,5 @@ plugins {
 rootProject.name = "FALVTP"
 gradle.rootProject {
     group = "sh.miles.falvtp"
-    version = "1.0.0"
+    version = "1.1.0"
 }
