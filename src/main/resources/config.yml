@@ -70,6 +70,8 @@ soul-vial:
   # item-model:   a resource pack item model such as myserver:soul_vial, or "" for the material's own model.
   # name / lore:  plain MiniMessage. Italic by default; the <!i> prefix turns that off.
   # liquid-color: colour of the liquid as #RRGGBB, or "" for the material's default.
+  # Set enabled to false to turn soul vial harvesting and binding off entirely.
+  enabled: true
   material: potion
   item-model: ""
   name: "<!i><aqua>Soul Vial"
@@ -80,6 +82,11 @@ soul-vial:
   # Counted per villager and stored on the villager. 0 turns the cooldown off.
   cooldown-ticks: 24000
 
+workstation-capture:
+  # Sneak + right-click a villager with its own job site block (e.g. a lectern for a librarian) to consume the
+  # villager. The block becomes a workstation item (see item:) that keeps the villager's trades, level and experience.
+  enabled: true
+
 messages:
   # Shown in the action bar. MiniMessage; "" turns a message off.
   harvest-success: "<green>The vial fills with the villager's soul"
@@ -89,6 +96,11 @@ messages:
   # <profession>: the profession of the workstation that was bound
   bind-success: "<green>The <profession> workstation awakens"
   bind-occupied: "<red>This workstation already holds a soul"
+  # <profession>: the captured villager's profession
+  capture-success: "<green>The <profession> moves into the workstation"
+  # <profession>: the villager's profession, which doesn't match the block in hand
+  capture-mismatch: "<red>A <profession> doesn't work at this workstation"
+  capture-busy: "<red>This villager is busy trading"
 
 protection:
   # protect = the trader is left in place, drop = it breaks and drops its workstation item.

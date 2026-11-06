@@ -15,15 +15,22 @@ import org.bukkit.entity.Villager;
  * @param harvestIneligible the villager can't be harvested at all
  * @param bindSuccess       a vial turned a workstation into a trader; {@code <profession>} is its profession
  * @param bindOccupied      the workstation is already a trader
+ * @param captureSuccess    a villager was consumed into its workstation; {@code <profession>} is its profession
+ * @param captureMismatch   the workstation isn't the villager's job site; {@code <profession>} is the villager's
+ * @param captureBusy       the villager is trading with someone
  */
-public record Messages(String harvestSuccess, String harvestCooldown, String harvestIneligible, String bindSuccess, String bindOccupied) {
+public record Messages(String harvestSuccess, String harvestCooldown, String harvestIneligible, String bindSuccess, String bindOccupied,
+                       String captureSuccess, String captureMismatch, String captureBusy) {
 
     public static final Messages DEFAULT = new Messages(
             "<green>The vial fills with the villager's soul",
             "<red>This villager's soul is still recovering (<time>)",
             "<red>This villager has no soul to give",
             "<green>The <profession> workstation awakens",
-            "<red>This workstation already holds a soul"
+            "<red>This workstation already holds a soul",
+            "<green>The <profession> moves into the workstation",
+            "<red>A <profession> doesn't work at this workstation",
+            "<red>This villager is busy trading"
     );
 
     public void harvestSuccess(Audience to) {
@@ -39,11 +46,27 @@ public record Messages(String harvestSuccess, String harvestCooldown, String har
     }
 
     public void bindSuccess(Audience to, Villager.Profession profession) {
-        send(to, bindSuccess, Placeholder.component("profession", Component.translatable(profession.translationKey())));
+        send(to, bindSuccess, profession(profession));
     }
 
     public void bindOccupied(Audience to) {
         send(to, bindOccupied, TagResolver.empty());
+    }
+
+    public void captureSuccess(Audience to, Villager.Profession profession) {
+        send(to, captureSuccess, profession(profession));
+    }
+
+    public void captureMismatch(Audience to, Villager.Profession profession) {
+        send(to, captureMismatch, profession(profession));
+    }
+
+    public void captureBusy(Audience to) {
+        send(to, captureBusy, TagResolver.empty());
+    }
+
+    private static TagResolver profession(Villager.Profession profession) {
+        return Placeholder.component("profession", Component.translatable(profession.translationKey()));
     }
 
     private static void send(Audience to, String template, TagResolver tags) {

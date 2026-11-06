@@ -123,13 +123,27 @@ Package root: `src/main/java/sh/miles/falvtp/`. Plugin descriptor: `src/main/res
   optional `item-model`, name, glint, lore, `liquid-color` (shown only on materials with default `potion_contents`,
   whose "No Effects" tooltip is hidden). `create()` returns an *untagged* item; `CONSUMABLE` is always removed so a
   potion vial can't be drunk.
-- Harvest: `EntityInteractListener` — sneak + right-click an adult, non-nitwit `Villager` with a glass bottle
+- Capture features (`world/capture/`): `CaptureFeature` has `onInteract(PlayerInteractAtEntityEvent)` (capture from an
+  entity) and `onTransform(PlayerInteractEvent)` (capture → trader on a workstation). `EntityInteractListener` and
+  `WorkstationInteractListener` only dispatch to the enabled features, in `FalvtpPlugin` order, and stop at the first
+  one that cancels — so a feature cancels exactly when it handled the click. Neither listener is registered when no
+  feature is enabled. Order: `SoulVialCaptureFeature` (`soul-vial.enabled`), then `WorkstationCaptureFeature`
+  (`workstation-capture.enabled`); both default true.
+- `WorkstationCaptureFeature#onInteract` — sneak + right-click an adult villager with its *own* job site block (plain or
+  basic-tagged; one carrying a snapshot is refused with `bindOccupied`). Refuses NONE/NITWIT/baby (`harvestIneligible`),
+  a different profession (`captureMismatch`), a villager mid-trade (`captureBusy`). Otherwise snapshots the villager
+  (type, profession, level, experience, `getRecipes()` — which rolls offers if none yet — restocks today, and
+  `lastRestockGameTime` via a VarHandle since there's no API), turns one block into `items.create` + snapshot, drops
+  the lead, `remove()`s the villager (`CraftVillager#remove` releases POIs). `onTransform` is a no-op: placing is
+  `BlockPlaceListener`. Not cooldown-limited: the villager is gone.
+- Harvest: `SoulVialCaptureFeature#onInteract` (via `EntityInteractListener`) — sneak + right-click an adult, non-nitwit `Villager` with a glass bottle
   (`PlayerInteractAtEntityEvent`, ignoreCancelled; in 26.3 it is the only entity-interact event and cancelling it
   stops the trade menu). Takes one bottle from the stack, gives `SoulVial.mark(settings.create())`.
 - `utils/SoulVial` — marker only (PDC `falvtp:soul_vial`, boolean): `mark`, `isSoulVial`. DNA is generic by design:
   **any vial binds to any workstation**, and the station's profession comes from the block — so the vial stores
   nothing about its source villager.
-- Bind: `WorkstationInteractListener` (PlayerInteractEvent, **HIGH**, ignoreCancelled) — main-hand soul vial on a plain
+- Bind: `SoulVialCaptureFeature#onTransform` (via `WorkstationInteractListener`: PlayerInteractEvent, **HIGH**,
+  ignoreCancelled) — main-hand soul vial on a plain
   workstation: cancels the event, uses the vial, `FalvtpTrader.create` for the block's profession. Vial on an
   existing trader: cancels and sends `bindOccupied`. Spectators skipped. `TraderInteractListener` runs at
   **HIGHEST**, ignoreCancelled, so a click the binder handled never also opens trades, and claim plugins
@@ -138,7 +152,8 @@ Package root: `src/main/java/sh/miles/falvtp/`. Plugin descriptor: `src/main/res
   villager's PDC (`falvtp:last_harvest`). `isReady`/`remaining`/`start(villager)`. A stored time in the future
   (world time reset) counts as ready.
 - `Messages` (`messages.*`) — action bar sends: `harvestSuccess`, `harvestCooldown(to, ticks)` (`<time>` like
-  `4m 30s`, rounded up), `harvestIneligible`, `bindSuccess(to, profession)` (`<profession>`), `bindOccupied`.
+  `4m 30s`, rounded up), `harvestIneligible`, `bindSuccess(to, profession)` (`<profession>`), `bindOccupied`, `captureSuccess`/
+  `captureMismatch(to, profession)`, `captureBusy`.
   Empty template = not sent.
 - Deliberately not configurable: pistons (always blocked — a piston moving a trader block would separate it from its
   data; a "drop" mode is possible since Paper re-reads the block state after the event (`PistonBaseBlock` ~L380), but it
@@ -147,7 +162,8 @@ Package root: `src/main/java/sh/miles/falvtp/`. Plugin descriptor: `src/main/res
 
 ### `FalvtpPlugin`
 Loads the config, creates `TradeSessions` + `TraderServer`, loads traders in already-loaded chunks, registers
-`TradeSessionsListener`, `BlockPlaceListener`, `ChunkListener`, `BlockChangeListener`, `TraderInteractListener`. `onDisable` closes all sessions then saves.
+`TradeSessionsListener`, `BlockPlaceListener`, `ChunkListener`, `BlockChangeListener`, `TraderInteractListener`, and — with the enabled `CaptureFeature`s — `EntityInteractListener` +
+`WorkstationInteractListener`. `onDisable` closes all sessions then saves.
 
 ## Status / open work
 1. No way to *create* a new trader yet: nothing calls `FalvtpTrader.create` (opening and restoring from an item

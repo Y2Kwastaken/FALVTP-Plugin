@@ -32,8 +32,10 @@ import java.util.Locale;
  * @param denySound            played when a trader is busy, null for none
  * @param menuTitle            trade menu title template
  * @param item                 the dropped workstation item
+ * @param soulVialEnabled      whether the soul vial capture feature is registered
  * @param soulVial             the filled soul vial a glass bottle becomes after harvesting a villager
  * @param harvestCooldown      how long each villager needs between harvests
+ * @param workstationCaptureEnabled whether the workstation capture feature is registered
  * @param messages             action bar messages
  * @param protection           what fire and explosions do to traders
  */
@@ -46,8 +48,10 @@ public record FalvtpConfig(
         @Nullable Sound denySound,
         String menuTitle,
         WorkstationItemSettings item,
+        boolean soulVialEnabled,
         SoulVialSettings soulVial,
         HarvestCooldown harvestCooldown,
+        boolean workstationCaptureEnabled,
         Messages messages,
         Protection protection
 ) {
@@ -105,14 +109,19 @@ public record FalvtpConfig(
                                 reader.plainLines("item.basic.lore", WorkstationItemSettings.DEFAULT.basic().lore())
                         )
                 ),
+                reader.bool("soul-vial.enabled", true),
                 reader.soulVial("soul-vial", SoulVialSettings.DEFAULT),
                 new HarvestCooldown(reader.longValue("soul-vial.cooldown-ticks", HarvestCooldown.DEFAULT.ticks(), 0)),
+                reader.bool("workstation-capture.enabled", true),
                 new Messages(
                         reader.string("messages.harvest-success", Messages.DEFAULT.harvestSuccess()),
                         reader.string("messages.harvest-cooldown", Messages.DEFAULT.harvestCooldown()),
                         reader.string("messages.harvest-ineligible", Messages.DEFAULT.harvestIneligible()),
                         reader.string("messages.bind-success", Messages.DEFAULT.bindSuccess()),
-                        reader.string("messages.bind-occupied", Messages.DEFAULT.bindOccupied())
+                        reader.string("messages.bind-occupied", Messages.DEFAULT.bindOccupied()),
+                        reader.string("messages.capture-success", Messages.DEFAULT.captureSuccess()),
+                        reader.string("messages.capture-mismatch", Messages.DEFAULT.captureMismatch()),
+                        reader.string("messages.capture-busy", Messages.DEFAULT.captureBusy())
                 ),
                 new Protection(
                         reader.mode("protection.fire", Protection.DEFAULT.fire()),
